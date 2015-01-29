@@ -37,15 +37,29 @@
         }
 
     };
-
-    domUtils.setAttributes = function setAttributes(element, obj) {
-        obj = typeof obj === 'object' ? obj : {};
-        for (key in obj) {
-            if (has.call(obj,key))
-                element.setAttribute(key, obj[key]);
+    /**
+     * Set attributes based on given object
+     * Batch version of native Element::setAttribute
+     * @method
+     * @param {Element} element - Element to be modified
+     * @param {string} params - Object with enumerable properties
+     */
+    domUtils.setAttributes = function setAttributes(element, params) {
+        params = typeof params === 'object' ? params : {};
+        for (key in params) {
+            if (has.call(params,key))
+                element.setAttribute(key, params[key]);
         }
         return element;
     };
+
+    /**
+     * Append multiple childs to element
+     * Batch version of native Element::appendChild
+     * @method
+     * @param {Element} element - Element to be modified
+     * @param {...Node} childs - List of Nodes to be appended in order
+     */
 
     domUtils.appendChilds = function appendChilds(element) {
         var childs = [].slice.call(arguments,1);
@@ -56,6 +70,13 @@
         element.appendChild(fragment);
     };
 
+    /**
+     * Parses HTML and creates DocumentFragment from it's content
+     * @method
+     * @param {Document} document - Document to be used as source
+     * @param {string} html - String containing HTML
+     */
+
     domUtils.createFragmentFromHTML = function parseHTML(document, html) {
         var q = document.createElement('div');
         q.insertAdjacentHTML('afterbegin', html);
@@ -63,6 +84,14 @@
         domUtils.appendChilds.apply(null, [fragment].concat([].slice.call(q.children)));
         return fragment;
     };
+
+    /**
+     * Detaches element from DOM, performs given operation, then inserts it in the same position
+     * @method
+     * @param {element} element - Element to be manipulated
+     * @param {function} func - function to be called on element (as this)
+     * @params {...any} subArgs - arguments provided to function
+     */
 
     domUtils.operateOnDetached = function operateOnDetached(element, func) {
         var subArgs = [].slice.call(arguments,2);
