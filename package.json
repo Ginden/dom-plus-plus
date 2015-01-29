@@ -1,0 +1,25 @@
+{
+  "name": "dom-plus-plus",
+  "version": "0.5.0",
+  "description": "DomPlusPlus is a simple library abstracting batch DOM operations",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Ginden/dom-plus-plus"
+  },
+  "keywords": [
+    "dom",
+    "browser",
+    "dom-plus-plus",
+    "vanilla"
+  ],
+  "author": "Michał \"Ginden\" Wadas",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/Ginden/dom-plus-plus/issues"
+  },
+  "homepage": "https://github.com/Ginden/dom-plus-plus"
+}
