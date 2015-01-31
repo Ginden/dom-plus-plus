@@ -191,7 +191,7 @@
     /**
      * Gets comment nodes inside of root.
      * @method
-     * @param {element} element - Element to be manipulated
+     * @param {Element} element - Element to be manipulated
      * @param {function} func - function to be called on element (as this)
      * @params {...any} subArgs - arguments provided to function
      */
