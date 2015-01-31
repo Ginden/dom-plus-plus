@@ -10,33 +10,85 @@
         return root.domPlusPlus = factory();
     }
 }(this, function () {
+    var global;
+    try {
+        global = Function('return this')();
+    } catch(e) {
+        if (typeof window !== undefined)
+            global = window;
+    }
     var domUtils = {};
     var has = ({}).hasOwnProperty;
-
+    var isValidDefineProperty = !!Object.defineProperty && (function(q) {
+        try {
+            Object.defineProperty(q, 'wow', {
+            value : 3
+            });
+        } catch (e) {}
+        return q.wow === 3;
+        }({}));
+    function defineProperty(obj, key, value) {
+        if (isValidDefineProperty)
+            Object.defineProperty(obj,key, {value: value, enumerable: false});
+        else
+            obj[key]=value;
+    }
+    function extendOrThrow(obj, key, value) {
+        if (obj.key)
+            throw new TypeError('It\'s impossible to extend this object.');
+        defineProperty(obj, key, value);
+    }
     domUtils.$extendNatives = function() {
         if (typeof Element !== 'undefined') {
-            Element.prototype.setAttributes = function() {
-                return domUtils.setAttributes.apply(null, [this].concat([].slice.call(arguments)));
-            };
+            extendOrThrow(Element.prototype, 'setAttributes', function() {
+                var subArgs = [this];
+                for(var i = 0; i < arguments.length; i++) {
+                    subArgs.push(arguments[i]);
+                }
+                return domUtils.setAttributes.apply(null, subArgs);
+            });
+            extendOrThrow(Element.prototype, 'getComments', function() {
+                var subArgs = [this];
+                for(var i = 0; i < arguments.length; i++) {
+                    subArgs.push(arguments[i]);
+                }
+                return domUtils.getComments.apply(null, subArgs);
+            })
         }
         if (typeof document !== 'undefined') {
-            document.createFragmentFromHTML = function() {
-                return domUtils.createFragmentFromHTML.apply(null, [this].concat([].slice.call(arguments)));
-            };
+            extendOrThrow(document, 'createFragmentFromHTML', function() {
+                var subArgs = [this];
+                for(var i = 0; i < arguments.length; i++) {
+                    subArgs.push(arguments[i]);
+                }
+                return domUtils.createFragmentFromHTML.apply(null, subArgs);
+            });
         }
         if (typeof Node !== 'undefined') {
-            Node.prototype.appendChilds = function() {
-                return domUtils.appendChilds.apply(null, [this].concat([].slice.call(arguments)));
-            };
-            Node.prototype.operateOnDetached = function() {
-                return domUtils.operateOnDetached.apply(null, [this].concat([].slice.call(arguments)));
-            };
-            Node.prototype.operateOnDetachedAsync = function() {
-                return domUtils.operateOnDetachedAsync.apply(null, [this].concat([].slice.call(arguments)));
-            };
+            extendOrThrow(Node.prototype, 'appendChilds', function() {
+                var subArgs = [this];
+                for(var i = 0; i < arguments.length; i++) {
+                    subArgs.push(arguments[i]);
+                }
+                return domUtils.appendChilds.apply(null, subArgs);
+            });
+            extendOrThrow(Node.prototype, 'operateOnDetached', function() {
+                var subArgs = [this];
+                for(var i = 0; i < arguments.length; i++) {
+                    subArgs.push(arguments[i]);
+                }
+                return domUtils.operateOnDetached.apply(null, subArgs);
+            });
+            extendOrThrow(Node.prototype, 'operateOnDetachedAsync', function() {
+                var subArgs = [this];
+                for(var i = 0; i < arguments.length; i++) {
+                    subArgs.push(arguments[i]);
+                }
+                return domUtils.operateOnDetachedAsync.apply(null, subArgs);
+            });
         }
-
     };
+
     /**
      * Set attributes based on given object
      * Batch version of native Element::setAttribute
@@ -62,7 +114,10 @@
      */
 
     domUtils.appendChilds = function appendChilds(element) {
-        var childs = [].slice.call(arguments,1);
+        var childs = [];
+        for(var i = 1; i < arguments.length; i++) {
+            childs.push(arguments[i]);
+        }
         var fragment = document.createDocumentFragment();
         for(var i = 0; i < childs.length; i++) {
             fragment.appendChild(childs[i]);
@@ -94,7 +149,10 @@
      */
 
     domUtils.operateOnDetached = function operateOnDetached(element, func) {
-        var subArgs = [].slice.call(arguments,2);
+        var subArgs = [];
+        for(var i = 2; i < arguments.length; i++) {
+            subArgs.push(arguments[i]);
+        }
         var parent = element.parentNode;
         var nextSibling = element.nextSibling;
         if (!parent)
@@ -107,7 +165,10 @@
     };
 
     domUtils.operateOnDetachedAsync = function operateOnDetachedAsync(element, func) {
-        var subArgs = [].slice.call(arguments,2);
+        var subArgs = [];
+        for(var i = 2; i < arguments.length; i++) {
+            subArgs.push(arguments[i]);
+        }
         var parent = element.parentNode;
         var nextSibling = element.nextSibling;
         if (!parent)
@@ -120,6 +181,24 @@
         func.apply(element, [done].concat(subArgs));
         return element;
     };
+
+    function nodeIteratorToArray(nodeIterator) {
+        var ret = [],r;
+        while(r = nodeIterator.next() && ret.push(r));
+        return ret;
+    }
+
+    /**
+     * Gets comment nodes inside of root.
+     * @method
+     * @param {element} element - Element to be manipulated
+     * @param {function} func - function to be called on element (as this)
+     * @params {...any} subArgs - arguments provided to function
+     */
+    domUtils.getComments = function getComments(root) {
+        var document = root.ownerDocument === null ? root : root.ownerDocument;
+        return nodeIteratorToArray(document.createNodeIterator(root, 128));
+    }
 
     return domUtils;
 }));
