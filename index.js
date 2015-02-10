@@ -34,7 +34,7 @@
             obj[key]=value;
     }
     function extendOrThrow(obj, key, value) {
-        if (obj.key)
+        if (obj[key])
             throw new TypeError('It\'s impossible to extend this object.');
         defineProperty(obj, key, value);
     }
