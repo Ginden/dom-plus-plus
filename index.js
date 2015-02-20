@@ -13,7 +13,7 @@
     var global;
     try {
         global = Function('return this')();
-    } catch(e) {
+    } catch(e) { // CSP
         if (typeof window !== undefined)
             global = window;
     }
@@ -188,17 +188,24 @@
         return ret;
     }
 
+    function removeChilds(element) {
+        while(element.firstChild && element.removeChild(element.firstChild));
+    }
+
+    domUtils.empty = function empty(element) {
+        return domUtils.operateOnDetached(element, removeChilds)
+    };
+
+
     /**
      * Gets comment nodes inside of root.
      * @method
-     * @param {Element} element - Element to be manipulated
-     * @param {function} func - function to be called on element (as this)
-     * @params {...any} subArgs - arguments provided to function
+     * @param {Element} root - Element to be manipulated
      */
     domUtils.getComments = function getComments(root) {
         var document = root.ownerDocument === null ? root : root.ownerDocument;
         return nodeIteratorToArray(document.createNodeIterator(root, 128));
-    }
+    };
 
     return domUtils;
 }));
