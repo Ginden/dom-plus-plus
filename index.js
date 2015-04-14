@@ -10,11 +10,12 @@
         return root.domPlusPlus = factory();
     }
 }(this, function () {
+    'use strict';
     var global;
     try {
         global = Function('return this')();
     } catch(e) { // CSP
-        if (typeof window !== undefined)
+        if (typeof window !== 'undefined')
             global = window;
     }
     var domUtils = {};
@@ -38,54 +39,31 @@
             throw new TypeError('It\'s impossible to extend this object.');
         defineProperty(obj, key, value);
     }
+
+    function toMethod(func) {
+        return function() {
+            var subArgs = [this];
+            for(var i = 0; i < arguments.length; i++) {
+                subArgs.push(arguments[i]);
+            }
+            return domUtils.setAttributes.apply(null, subArgs);
+        }
+    }
+
     domUtils.$extendNatives = function() {
         if (typeof Element !== 'undefined') {
-            extendOrThrow(Element.prototype, 'setAttributes', function() {
-                var subArgs = [this];
-                for(var i = 0; i < arguments.length; i++) {
-                    subArgs.push(arguments[i]);
-                }
-                return domUtils.setAttributes.apply(null, subArgs);
-            });
-            extendOrThrow(Element.prototype, 'getComments', function() {
-                var subArgs = [this];
-                for(var i = 0; i < arguments.length; i++) {
-                    subArgs.push(arguments[i]);
-                }
-                return domUtils.getComments.apply(null, subArgs);
-            })
+            extendOrThrow(Element.prototype, 'setAttributes', toMethod(domUtils.setAttributes));
+            extendOrThrow(Element.prototype, 'getComments', toMethod(domUtils.getComments))
         }
         if (typeof document !== 'undefined') {
-            extendOrThrow(document, 'createFragmentFromHTML', function() {
-                var subArgs = [this];
-                for(var i = 0; i < arguments.length; i++) {
-                    subArgs.push(arguments[i]);
-                }
-                return domUtils.createFragmentFromHTML.apply(null, subArgs);
-            });
+            extendOrThrow(document, 'createFragmentFromHTML', toMethod(domUtils.createFragmentFromHTML));
         }
         if (typeof Node !== 'undefined') {
-            extendOrThrow(Node.prototype, 'appendChilds', function() {
-                var subArgs = [this];
-                for(var i = 0; i < arguments.length; i++) {
-                    subArgs.push(arguments[i]);
-                }
-                return domUtils.appendChilds.apply(null, subArgs);
-            });
-            extendOrThrow(Node.prototype, 'operateOnDetached', function() {
-                var subArgs = [this];
-                for(var i = 0; i < arguments.length; i++) {
-                    subArgs.push(arguments[i]);
-                }
-                return domUtils.operateOnDetached.apply(null, subArgs);
-            });
-            extendOrThrow(Node.prototype, 'operateOnDetachedAsync', function() {
-                var subArgs = [this];
-                for(var i = 0; i < arguments.length; i++) {
-                    subArgs.push(arguments[i]);
-                }
-                return domUtils.operateOnDetachedAsync.apply(null, subArgs);
-            });
+            extendOrThrow(Node.prototype, 'appendChilds', toMethod(domUtils.appendChilds));
+            extendOrThrow(Node.prototype, 'operateOnDetached', toMethod(domUtils.operateOnDetached));
+            extendOrThrow(Node.prototype, 'operateOnDetachedAsync', toMethod(domUtils.operateOnDetachedAsync));
+            extendOrThrow(Node.prototype, 'empty', toMethod(domUtils.empty));
+
         }
     };
 
@@ -98,7 +76,7 @@
      */
     domUtils.setAttributes = function setAttributes(element, params) {
         params = typeof params === 'object' ? params : {};
-        for (key in params) {
+        for (var key in params) {
             if (has.call(params,key))
                 element.setAttribute(key, params[key]);
         }
@@ -118,8 +96,8 @@
         for(var i = 1; i < arguments.length; i++) {
             childs.push(arguments[i]);
         }
-        var fragment = document.createDocumentFragment();
-        for(var i = 0; i < childs.length; i++) {
+        var fragment = (element.ownerDocument ? element.ownerDocument : element).createDocumentFragment();
+        for(i = 0; i < childs.length; i++) {
             fragment.appendChild(childs[i]);
         }
         element.appendChild(fragment);
@@ -196,6 +174,22 @@
         return domUtils.operateOnDetached(element, removeChilds)
     };
 
+
+    /**
+     * Creates element with given attributes and content
+     * @method
+     * @param {Document} document - Child document
+     * @param {string} tagName - tag name to create
+     * @param {Object} attributes - attributes
+     * @param {Element} content - Element to insert (or string to be converted)
+     */
+    domUtils.createExtendedElement = function createElementExtended(document, tagName, attributes, content) {
+        var element = document.createElement(tagName);
+        if(attributes) domUtils.setAttributes(element, attributes);
+        if (content) element.appendChild(typeof content === 'string' ? document.createTextNode(content) : content);
+
+        return element;
+    };
 
     /**
      * Gets comment nodes inside of root.

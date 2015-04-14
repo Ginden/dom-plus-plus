@@ -1,6 +1,6 @@
 {
   "name": "dom-plus-plus",
-  "version": "0.6.0",
+  "version": "0.7.0",
   "description": "DomPlusPlus is a simple library abstracting batch DOM operations",
   "main": "index.js",
   "scripts": {
