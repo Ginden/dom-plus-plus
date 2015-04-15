@@ -35,15 +35,14 @@
             obj[key]=value;
     }
     function extendOrThrow(obj, key, value) {
-        if (obj[key])
-            throw new TypeError('It\'s impossible to extend this object.');
+        if (has.call(obj, key))
+            throw new TypeError('It\'s impossible to extend this object (attempted to extend '+String(obj)+' with key '+String(key)+')');
         defineProperty(obj, key, value);
     }
 
     function toMethod(func) {
         return function() {
-            var subArgs = [this];
-            for(var i = 0; i < arguments.length; i++) {
+            for(var i = 0, subArgs = [this]; i < arguments.length; i++) {
                 subArgs.push(arguments[i]);
             }
             return domUtils.setAttributes.apply(null, subArgs);
@@ -53,7 +52,31 @@
     domUtils.$extendNatives = function() {
         if (typeof Element !== 'undefined') {
             extendOrThrow(Element.prototype, 'setAttributes', toMethod(domUtils.setAttributes));
-            extendOrThrow(Element.prototype, 'getComments', toMethod(domUtils.getComments))
+            extendOrThrow(Element.prototype, 'getComments', toMethod(domUtils.getComments));
+            extendOrThrow(Element.prototype, 'insertHTMLBeforeBegin', function(){
+                for(var i = 0, subArgs = ['beforebegin']; i < arguments.length; i++) {
+                    subArgs.push(arguments[i]);
+                }
+                this.insertAdjacentHTML.apply(this,subArgs )
+            });
+            extendOrThrow(Element.prototype, 'insertHTMLAfterBegin', function(){
+                for(var i = 0, subArgs = ['afterbegin']; i < arguments.length; i++) {
+                    subArgs.push(arguments[i]);
+                }
+                this.insertAdjacentHTML.apply(this,subArgs )
+            });
+            extendOrThrow(Element.prototype, 'insertHTMLBeforeEnd', function(){
+                for(var i = 0, subArgs = ['beforeend']; i < arguments.length; i++) {
+                    subArgs.push(arguments[i]);
+                }
+                this.insertAdjacentHTML.apply(this,subArgs )
+            });
+            extendOrThrow(Element.prototype, 'insertHTMLAfterEnd', function(){
+                for(var i = 0, subArgs = ['afterend']; i < arguments.length; i++) {
+                    subArgs.push(arguments[i]);
+                }
+                this.insertAdjacentHTML.apply(this, subArgs);
+            });
         }
         if (typeof document !== 'undefined') {
             extendOrThrow(document, 'createFragmentFromHTML', toMethod(domUtils.createFragmentFromHTML));
@@ -65,6 +88,35 @@
             extendOrThrow(Node.prototype, 'empty', toMethod(domUtils.empty));
 
         }
+    };
+    // Extends NodeList
+    domUtils.$extendNodeList = function(doc){
+        doc = doc || global.document;
+        var constructorPrototype = (document.querySelectorAll('*')).constructor.prototype;
+        var array = [];
+        var methods = ['map', 'filter', 'slice',
+                       'forEach', 'reduce', 'reduceRight',
+                       'some', 'every', 'find',
+                       'findIndex', 'entries', 'keys',
+                       'indexOf', 'lastIndexOf', 'join',
+                        'copyWithin'
+        ];
+        var forbidden = ['reverse', 'sort', 'push', 'pop', 'shift', 'splice', 'fill'];
+        function forbiddenFunc(name){
+            return function(){
+                var constructorName = (this.constructor && this.constructor.name) || 'NodeList';
+                throw new TypeError(constructorName+' instances doesn\'t support mutating method .' +name+'.');
+            };
+        }
+        for(var i = 0; i < methods.length;i++) {
+            if (array[methods[i]])
+                extendOrThrow(constructorPrototype, methods[i], array[methods[i]]);
+        }
+        for(i = 0; i < forbidden.length;i++) {
+            if (array[forbidden[i]])
+                extendOrThrow(constructorPrototype, forbidden[i], forbiddenFunc(forbidden[i]));
+        }
+
     };
 
     /**
@@ -92,8 +144,7 @@
      */
 
     domUtils.appendChilds = function appendChilds(element) {
-        var childs = [];
-        for(var i = 1; i < arguments.length; i++) {
+        for(var i = 1, childs = []; i < arguments.length; i++) {
             childs.push(arguments[i]);
         }
         var fragment = (element.ownerDocument ? element.ownerDocument : element).createDocumentFragment();
@@ -127,8 +178,7 @@
      */
 
     domUtils.operateOnDetached = function operateOnDetached(element, func) {
-        var subArgs = [];
-        for(var i = 2; i < arguments.length; i++) {
+        for(var i = 2, subArgs = []; i < arguments.length; i++) {
             subArgs.push(arguments[i]);
         }
         var parent = element.parentNode;
@@ -187,7 +237,6 @@
         var element = document.createElement(tagName);
         if(attributes) domUtils.setAttributes(element, attributes);
         if (content) element.appendChild(typeof content === 'string' ? document.createTextNode(content) : content);
-
         return element;
     };
 
