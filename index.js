@@ -125,7 +125,7 @@
      * Batch version of native Element::setAttribute
      * @method
      * @param {Element} element - Element to be modified
-     * @param {string} params - Object with enumerable properties
+     * @param {Object} params - Object with enumerable properties
      */
     domUtils.setAttributes = function setAttributes(element, params) {
         params = (params && typeof params === 'object') ? params : {};
@@ -142,7 +142,7 @@
      * Batch version of native Element::appendChild
      * @method
      * @param {Element} element - Element to be modified
-     * @param {...Node} childs - List of Nodes to be appended in order
+     * @params {...Node} childs - List of Nodes to be appended in order
      */
 
     domUtils.appendChilds = function appendChilds(element) {
@@ -158,7 +158,7 @@
      * Batch version of native Element::appendChild
      * @method
      * @param {Element} element - Element to be modified
-     * @param {...Node} childs - List of Nodes to be appended in order
+     * @params {...Node} childs - List of Nodes to be appended in order
      */
 
     domUtils.prependChilds = function prependChilds(element) {
@@ -199,7 +199,7 @@
     /**
      * Detaches element from DOM, performs given operation, then inserts it in the same position
      * @method
-     * @param {element} element - Element to be manipulated
+     * @param {Element} element - Element to be manipulated
      * @param {function} func - function to be called on element (as this)
      * @params {...any} subArgs - arguments provided to function
      */
@@ -212,7 +212,7 @@
         }
 
         if (!parent) {
-            throw new TypeError('.parentNode doesn\'t exist');
+            throw new TypeError('.parentNode does not exist');
         }
         var reattachMethod = nextSibling ? parent.insertBefore : parent.appendChild;
         parent.removeChild(element);
@@ -228,7 +228,7 @@
         var parent = element.parentNode;
         var nextSibling = element.nextSibling;
         if (!parent) {
-            throw new TypeError('.parentNode doesn\'t exist');
+            throw new TypeError('.parentNode does not exist');
         }
         var reattachMethod = nextSibling ? parent.insertBefore : parent.appendChild;
         parent.removeChild(element);
@@ -250,7 +250,7 @@
 
     function removeChilds(element) {
         while (element.firstChild && element.removeChild(element.firstChild)) {
-            ;
+
         }
     }
 
@@ -265,7 +265,7 @@
      * @param {Document} document - Child document
      * @param {string} tagName - tag name to create
      * @param {Object} attributes - attributes
-     * @param {Element} content - Element to insert (or string to be converted)
+     * @param {Element|string} content - Element to insert (or string to be converted to TextNode)
      */
     domUtils.createExtendedElement = function createElementExtended(document, tagName, attributes, content) {
         var element = document.createElement(tagName);
