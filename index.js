@@ -13,22 +13,20 @@
     'use strict';
     var global;
     try {
-        global = Function('return this')();
-    } catch (e) { // CSP
-        if (typeof window !== 'undefined') {
-            global = window;
-        }
+        global = Function('return this')() || (42, eval)('this');
+    } catch(e) {
+        global = window;
     }
     var domUtils = {};
     var has = {}.hasOwnProperty;
     var isValidDefineProperty = !!Object.defineProperty && (function (q) {
             try {
-                Object.defineProperty(q, 'roperty', {
+                Object.defineProperty(q, 'Object', { // Reusing name lowers gzipped size by 5 bytes
                     value: 3
                 });
             } catch (e) {
             }
-            return q.roperty === 3;
+            return q.Object === 3;
         }({}));
 
     function defineProperty(obj, key, value) {
@@ -41,7 +39,7 @@
 
     function extendOrThrow(obj, key, value) {
         if (has.call(obj, key)) {
-            throw new TypeError('It\'s impossible to extend this object (attempted to extend ' + obj + ' with key ' + key + ')');
+            throw new TypeError('It\'s impossible to extend object (attempted to extend ' + obj + ' with key ' + key + ')');
         }
         defineProperty(obj, key, value);
     }
@@ -52,7 +50,7 @@
                 subArgs.push(arguments[i]);
             }
             return func.apply(null, subArgs);
-        }
+        };
     }
 
     function insertAdjacentCurry(type) {
@@ -61,7 +59,7 @@
                 subArgs.push(arguments[i]);
             }
             return this.insertAdjacentHTML.apply(this, subArgs);
-        }
+        };
     }
 
     domUtils.$extendNatives = function () {
@@ -83,7 +81,11 @@
             extendOrThrow(Node.prototype, 'operateOnDetached',      toMethod(domUtils.operateOnDetached));
             extendOrThrow(Node.prototype, 'operateOnDetachedAsync', toMethod(domUtils.operateOnDetachedAsync));
             extendOrThrow(Node.prototype, 'empty',                  toMethod(domUtils.empty));
-
+        }
+        if (typeof Text === 'undefined') {
+            global.Text = function Text(str) {
+                return global.document.createTextNode(str);
+            };
         }
     };
     // Extends NodeList
@@ -210,48 +212,36 @@
         for (var i = 2, subArgs = []; i < arguments.length; i++) {
             subArgs.push(arguments[i]);
         }
-
         if (!parent) {
             throw new TypeError('.parentNode does not exist');
         }
-        var reattachMethod = nextSibling ? parent.insertBefore : parent.appendChild;
+        var insertBefore = parent.insertBefore;
         parent.removeChild(element);
         func.apply(element, subArgs);
-        reattachMethod.call(parent, element, nextSibling);
+        insertBefore.call(parent, element, nextSibling);
         return element;
     };
 
     domUtils.operateOnDetachedAsync = function operateOnDetachedAsync(element, func) {
+        var parent = element.parentNode;
+        var nextSibling = element.nextSibling;
         for (var i = 2, subArgs = []; i < arguments.length; i++) {
             subArgs.push(arguments[i]);
         }
-        var parent = element.parentNode;
-        var nextSibling = element.nextSibling;
         if (!parent) {
             throw new TypeError('.parentNode does not exist');
         }
-        var reattachMethod = nextSibling ? parent.insertBefore : parent.appendChild;
+        var insertBefore = parent.insertBefore;
         parent.removeChild(element);
-        function done() {
-            reattachMethod.call(parent, element, nextSibling);
-        }
-
         func.apply(element, [done].concat(subArgs));
+        function done() {
+            insertBefore.call(parent, element, nextSibling);
+        }
         return element;
     };
 
-    function nodeIteratorToArray(nodeIterator) {
-        var ret = [], r;
-        while (r = nodeIterator.next() && ret.push(r)) {
-
-        }
-        return ret;
-    }
-
     function removeChilds(element) {
-        while (element.firstChild && element.removeChild(element.firstChild)) {
-
-        }
+        while (element.firstChild && element.removeChild(element.firstChild));
     }
 
     domUtils.empty = function empty(element) {
@@ -278,15 +268,13 @@
         return element;
     };
 
-    /**
-     * Gets comment nodes inside of element.
-     * @method
-     * @param {Element} element - Element to be manipulated
-     */
-    domUtils.getComments = function getComments(element) {
-        var document = element.ownerDocument === null ? element : element.ownerDocument;
-        return nodeIteratorToArray(document.createNodeIterator(element, 128));
+    domUtils.escapeHTML = function escapeHTML(document, str) {
+        var element = document.createElement('div');
+        element.appendChild(document.createTextNode(str));
+        return element.innerHTML;
     };
+
+
 
     return domUtils;
 }));
