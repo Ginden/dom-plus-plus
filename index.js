@@ -240,8 +240,8 @@
         return element;
     };
 
-    function removeChilds(element) {
-        while (element.firstChild && element.removeChild(element.firstChild));
+    function removeChilds() {
+        while (this.firstChild && this.removeChild(this.firstChild));
     }
 
     domUtils.empty = function empty(element) {
